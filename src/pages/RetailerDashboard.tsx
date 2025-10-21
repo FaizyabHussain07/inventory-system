@@ -4,6 +4,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../components/SessionContextProvider';
 import { supabase } from '../integrations/supabase/client';
+import RetailerProductList from '../components/RetailerProductList'; // Import the new component
+import { Button } from '../components/ui/button';
 
 const RetailerDashboard = () => {
   const navigate = useNavigate();
@@ -25,17 +27,21 @@ const RetailerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-md text-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">Welcome, Retailer {profile?.first_name || session.user?.email}!</h1>
-        <p className="text-gray-600 mb-6">This is your Retailer Dashboard.</p>
-        <button
+    <div className="min-h-screen bg-gray-100 flex flex-col p-4">
+      <header className="w-full bg-white p-4 rounded-lg shadow-md flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-gray-800">Welcome, Retailer {profile?.first_name || session.user?.email}!</h1>
+        <Button
           onClick={handleLogout}
           className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          variant="destructive"
         >
           Logout
-        </button>
-      </div>
+        </Button>
+      </header>
+
+      <main className="flex-1 w-full max-w-6xl mx-auto">
+        <RetailerProductList />
+      </main>
     </div>
   );
 };
