@@ -1,9 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useSession } from '../components/SessionContextProvider';
 import { supabase } from '../integrations/supabase/client';
+import { Button } from '../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../components/ui/dialog';
+import AddProductForm from '../components/AddProductForm';
 
 interface Product {
   id: string;
@@ -23,6 +32,7 @@ const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading && (!session || profile?.role !== 'admin')) {
@@ -30,28 +40,34 @@ const ProductsPage = () => {
     }
   }, [session, profile, isLoading, navigate]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      if (session && profile?.role === 'admin') {
-        setLoadingProducts(true);
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('admin_id', session.user.id); // Fetch only products owned by the current admin
+  const fetchProducts = async () => {
+    if (session && profile?.role === 'admin') {
+      setLoadingProducts(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('admin_id', session.user.id)
+        .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error fetching products:', error);
-          setError('Failed to load products.');
-          setProducts([]);
-        } else {
-          setProducts(data || []);
-        }
-        setLoadingProducts(false);
+      if (error) {
+        console.error('Error fetching products:', error);
+        setError('Failed to load products.');
+        setProducts([]);
+      } else {
+        setProducts(data || []);
       }
-    };
+      setLoadingProducts(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProducts();
   }, [session, profile]);
+
+  const handleProductAdded = () => {
+    fetchProducts(); // Refresh the list after a new product is added
+    setIsAddProductDialogOpen(false); // Close the dialog
+  };
 
   const calculateProfitPerPiece = (product: Product) => {
     return product.sale_price_per_unit - product.wholesale_price_per_unit;
@@ -71,7 +87,7 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar Navigation (duplicate from AdminDashboard for now, will refactor later) */}
+      {/* Sidebar Navigation */}
       <aside className="w-64 bg-gray-800 text-white p-4 space-y-6">
         <h2 className="text-2xl font-bold mb-6">Admin Panel</h2>
         <nav>
@@ -89,12 +105,13 @@ const ProductsPage = () => {
             {/* Add more admin links here */}
           </ul>
         </nav>
-        <button
+        <Button
           onClick={async () => { await supabase.auth.signOut(); navigate('/login'); }}
           className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors mt-auto"
+          variant="destructive"
         >
           Logout
-        </button>
+        </Button>
       </aside>
 
       {/* Main Content */}
@@ -102,9 +119,17 @@ const ProductsPage = () => {
         <div className="bg-white p-8 rounded-lg shadow-md">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Product Management</h1>
           <div className="flex justify-end mb-4">
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-              Add New Product
-            </button>
+            <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Add New Product</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Add New Product</DialogTitle>
+                </DialogHeader>
+                <AddProductForm onProductAdded={handleProductAdded} onClose={() => setIsAddProductDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
           </div>
 
           {products.length === 0 ? (
