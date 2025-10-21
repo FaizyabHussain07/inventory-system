@@ -1,11 +1,42 @@
 "use client";
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { SessionContextProvider } from './components/SessionContextProvider';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { SessionContextProvider, useSession } from './components/SessionContextProvider';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import RetailerDashboard from './pages/RetailerDashboard';
 import './index.css'; // Ensure Tailwind CSS is imported
+
+// A wrapper component to handle redirects based on session and role
+const AuthRedirect = () => {
+  const { session, profile, isLoading } = useSession();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!isLoading) {
+      if (!session) {
+        navigate('/login');
+      } else if (profile) {
+        if (profile.role === 'admin') {
+          navigate('/admin-dashboard');
+        } else if (profile.role === 'retailer') {
+          navigate('/retailer-dashboard');
+        } else {
+          // Handle cases where role is not set or unknown, maybe redirect to a profile setup page
+          console.warn("User role not defined, redirecting to login.");
+          navigate('/login');
+        }
+      }
+    }
+  }, [session, profile, isLoading, navigate]);
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen text-lg">Loading application...</div>;
+  }
+
+  return null; // This component only handles redirects
+};
 
 function App() {
   return (
@@ -13,8 +44,9 @@ function App() {
       <SessionContextProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/" element={<Dashboard />} /> {/* Default route */}
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/retailer-dashboard" element={<RetailerDashboard />} />
+          <Route path="/" element={<AuthRedirect />} /> {/* Default route to handle initial redirect */}
         </Routes>
       </SessionContextProvider>
     </Router>

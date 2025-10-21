@@ -9,13 +9,21 @@ import { useSession } from '../components/SessionContextProvider';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { session, isLoading } = useSession();
+  const { session, profile, isLoading } = useSession();
 
   React.useEffect(() => {
-    if (!isLoading && session) {
-      navigate('/dashboard');
+    if (!isLoading && session && profile) {
+      if (profile.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (profile.role === 'retailer') {
+        navigate('/retailer-dashboard');
+      } else {
+        // If role is not set, default to admin for now or a setup page
+        console.warn("User role not defined after login, defaulting to admin dashboard.");
+        navigate('/admin-dashboard');
+      }
     }
-  }, [session, isLoading, navigate]);
+  }, [session, profile, isLoading, navigate]);
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen text-lg">Loading...</div>;
@@ -44,7 +52,7 @@ const Login = () => {
             },
           }}
           theme="light"
-          redirectTo={window.location.origin + '/dashboard'}
+          redirectTo={window.location.origin + '/'} // Redirect to root, which will then handle role-based redirect
         />
       </div>
     </div>
