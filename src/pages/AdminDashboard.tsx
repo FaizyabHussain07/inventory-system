@@ -4,6 +4,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSession } from '../components/SessionContextProvider';
 import { supabase } from '../integrations/supabase/client';
+import { Button } from '../components/ui/button'; // Import Button for logout
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -41,15 +42,21 @@ const AdminDashboard = () => {
                 Products
               </Link>
             </li>
+            <li>
+              <Link to="/admin/retailers" className="block px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                Retailers
+              </Link>
+            </li>
             {/* Add more admin links here */}
           </ul>
         </nav>
-        <button
+        <Button
           onClick={handleLogout}
           className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors mt-auto"
+          variant="destructive"
         >
           Logout
-        </button>
+        </Button>
       </aside>
 
       {/* Main Content */}

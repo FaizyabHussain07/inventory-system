@@ -6,7 +6,8 @@ import { SessionContextProvider, useSession } from './components/SessionContextP
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import RetailerDashboard from './pages/RetailerDashboard';
-import ProductsPage from './pages/ProductsPage'; // Import the new ProductsPage
+import ProductsPage from './pages/ProductsPage';
+import RetailersPage from './pages/RetailersPage'; // Import the new RetailersPage
 import './index.css'; // Ensure Tailwind CSS is imported
 
 // A wrapper component to handle redirects based on session and role
@@ -46,7 +47,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/products" element={<ProductsPage />} /> {/* New route for ProductsPage */}
+          <Route path="/admin/products" element={<ProductsPage />} />
+          <Route path="/admin/retailers" element={<RetailersPage />} /> {/* New route for RetailersPage */}
           <Route path="/retailer-dashboard" element={<RetailerDashboard />} />
           <Route path="/" element={<AuthRedirect />} /> {/* Default route to handle initial redirect */}
         </Routes>
