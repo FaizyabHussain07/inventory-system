@@ -9,7 +9,8 @@ import RetailerDashboard from './pages/RetailerDashboard';
 import ProductsPage from './pages/ProductsPage';
 import RetailersPage from './pages/RetailersPage';
 import ProductAssignmentsPage from './pages/ProductAssignmentsPage';
-import UserManagementPage from './pages/UserManagementPage'; // Import the new UserManagementPage
+import UserManagementPage from './pages/UserManagementPage';
+import ProfilePage from './pages/ProfilePage'; // Import the new ProfilePage
 import './index.css'; // Ensure Tailwind CSS is imported
 
 // A wrapper component to handle redirects based on session and role
@@ -52,8 +53,9 @@ function App() {
           <Route path="/admin/products" element={<ProductsPage />} />
           <Route path="/admin/retailers" element={<RetailersPage />} />
           <Route path="/admin/product-assignments" element={<ProductAssignmentsPage />} />
-          <Route path="/admin/user-management" element={<UserManagementPage />} /> {/* New route */}
+          <Route path="/admin/user-management" element={<UserManagementPage />} />
           <Route path="/retailer-dashboard" element={<RetailerDashboard />} />
+          <Route path="/profile" element={<ProfilePage />} /> {/* New route */}
           <Route path="/" element={<AuthRedirect />} /> {/* Default route to handle initial redirect */}
         </Routes>
       </SessionContextProvider>

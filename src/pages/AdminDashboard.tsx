@@ -57,6 +57,11 @@ const AdminDashboard = () => {
                 User Management
               </Link>
             </li>
+            <li>
+              <Link to="/profile" className="block px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                Profile
+              </Link>
+            </li>
             {/* Add more admin links here */}
           </ul>
         </nav>

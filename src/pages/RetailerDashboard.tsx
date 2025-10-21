@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useSession } from '../components/SessionContextProvider';
 import { supabase } from '../integrations/supabase/client';
 import RetailerProductList from '../components/RetailerProductList'; // Import the new component
@@ -42,6 +42,31 @@ const RetailerDashboard = () => {
       <main className="flex-1 w-full max-w-6xl mx-auto">
         <RetailerProductList />
       </main>
+      {/* Sidebar for Retailer Dashboard */}
+      <aside className="w-64 bg-gray-800 text-white p-4 space-y-6 fixed right-0 top-0 h-full hidden md:block">
+        <h2 className="text-2xl font-bold mb-6">Retailer Panel</h2>
+        <nav>
+          <ul className="space-y-2">
+            <li>
+              <Link to="/retailer-dashboard" className="block px-4 py-2 rounded-md bg-gray-700 transition-colors">
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <Link to="/profile" className="block px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                Profile
+              </Link>
+            </li>
+          </ul>
+        </nav>
+        <Button
+          onClick={handleLogout}
+          className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors mt-auto"
+          variant="destructive"
+        >
+          Logout
+        </Button>
+      </aside>
     </div>
   );
 };
