@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -35,12 +35,25 @@ const productSchema = z.object({
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
-interface AddProductFormProps {
-  onProductAdded: () => void;
+interface Product {
+  id: string;
+  name: string;
+  size: string | null;
+  pieces_per_unit: number;
+  current_stock_units: number;
+  wholesale_price_per_unit: number;
+  sale_price_per_unit: number;
+  admin_id: string;
+  created_at: string;
+}
+
+interface ProductFormProps {
+  initialProduct?: Product; // Optional prop for editing
+  onProductSaved: () => void;
   onClose: () => void;
 }
 
-const AddProductForm = ({ onProductAdded, onClose }: AddProductFormProps) => {
+const ProductForm = ({ initialProduct, onProductSaved, onClose }: ProductFormProps) => {
   const { session } = useSession();
   const {
     register,
@@ -49,7 +62,7 @@ const AddProductForm = ({ onProductAdded, onClose }: AddProductFormProps) => {
     reset,
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
+    defaultValues: initialProduct || {
       name: '',
       size: '',
       pieces_per_unit: 1,
@@ -59,34 +72,58 @@ const AddProductForm = ({ onProductAdded, onClose }: AddProductFormProps) => {
     },
   });
 
+  useEffect(() => {
+    // Reset form with initialProduct data when it changes (for editing)
+    reset(initialProduct || {
+      name: '',
+      size: '',
+      pieces_per_unit: 1,
+      current_stock_units: 0,
+      wholesale_price_per_unit: 0,
+      sale_price_per_unit: 0,
+    });
+  }, [initialProduct, reset]);
+
   const onSubmit = async (values: ProductFormValues) => {
     if (!session?.user?.id) {
-      showError("You must be logged in to add a product.");
+      showError("You must be logged in to manage products.");
       return;
     }
 
-    const toastId = showLoading("Adding product...");
+    const toastId = showLoading(initialProduct ? "Updating product..." : "Adding product...");
 
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .insert({
-          ...values,
-          admin_id: session.user.id,
-        })
-        .select();
+      let error = null;
+      if (initialProduct) {
+        // Update existing product
+        const { error: updateError } = await supabase
+          .from('products')
+          .update(values)
+          .eq('id', initialProduct.id)
+          .eq('admin_id', session.user.id); // Ensure only admin can update their own product
+        error = updateError;
+      } else {
+        // Insert new product
+        const { error: insertError } = await supabase
+          .from('products')
+          .insert({
+            ...values,
+            admin_id: session.user.id,
+          });
+        error = insertError;
+      }
 
       if (error) {
         throw error;
       }
 
-      showSuccess("Product added successfully!");
+      showSuccess(initialProduct ? "Product updated successfully!" : "Product added successfully!");
       reset();
-      onProductAdded();
+      onProductSaved();
       onClose();
     } catch (error: any) {
-      console.error("Error adding product:", error);
-      showError(`Failed to add product: ${error.message || 'Unknown error'}`);
+      console.error("Error saving product:", error);
+      showError(`Failed to save product: ${error.message || 'Unknown error'}`);
     } finally {
       dismissToast(toastId);
     }
@@ -126,11 +163,11 @@ const AddProductForm = ({ onProductAdded, onClose }: AddProductFormProps) => {
       </div>
       <DialogFooter>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Adding..." : "Add Product"}
+          {isSubmitting ? (initialProduct ? "Updating..." : "Adding...") : (initialProduct ? "Save Changes" : "Add Product")}
         </Button>
       </DialogFooter>
     </form>
   );
 };
 
-export default AddProductForm;
+export default ProductForm;

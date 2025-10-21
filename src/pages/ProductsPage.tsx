@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../components/ui/dialog';
-import AddProductForm from '../components/AddProductForm';
+import ProductForm from '../components/ProductForm'; // Updated import
 
 interface Product {
   id: string;
@@ -33,8 +33,10 @@ const ProductsPage = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
+  const [isEditProductDialogOpen, setIsEditProductDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isLoading && (!session || profile?.role !== 'admin')) {
       navigate('/login');
     }
@@ -64,9 +66,46 @@ const ProductsPage = () => {
     fetchProducts();
   }, [session, profile]);
 
-  const handleProductAdded = () => {
-    fetchProducts(); // Refresh the list after a new product is added
-    setIsAddProductDialogOpen(false); // Close the dialog
+  const handleProductSaved = () => {
+    fetchProducts(); // Refresh the list after a new product is added or edited
+    setIsAddProductDialogOpen(false); // Close add dialog
+    setIsEditProductDialogOpen(false); // Close edit dialog
+    setSelectedProduct(null); // Clear selected product
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!session?.user?.id) {
+      console.error("User not authenticated.");
+      return;
+    }
+
+    if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
+      const toastId = showLoading("Deleting product...");
+      try {
+        const { error } = await supabase
+          .from('products')
+          .delete()
+          .eq('id', productId)
+          .eq('admin_id', session.user.id); // Ensure only admin can delete their own product
+
+        if (error) {
+          throw error;
+        }
+
+        showSuccess("Product deleted successfully!");
+        fetchProducts(); // Refresh the list
+      } catch (error: any) {
+        console.error("Error deleting product:", error);
+        showError(`Failed to delete product: ${error.message || 'Unknown error'}`);
+      } finally {
+        dismissToast(toastId);
+      }
+    }
+  };
+
+  const handleEditClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditProductDialogOpen(true);
   };
 
   const calculateProfitPerPiece = (product: Product) => {
@@ -127,7 +166,7 @@ const ProductsPage = () => {
                 <DialogHeader>
                   <DialogTitle>Add New Product</DialogTitle>
                 </DialogHeader>
-                <AddProductForm onProductAdded={handleProductAdded} onClose={() => setIsAddProductDialogOpen(false)} />
+                <ProductForm onProductSaved={handleProductSaved} onClose={() => setIsAddProductDialogOpen(false)} />
               </DialogContent>
             </Dialog>
           </div>
@@ -162,8 +201,8 @@ const ProductsPage = () => {
                       <td className="py-2 px-4 border-b">${calculateProfitPerPiece(product).toFixed(2)}</td>
                       <td className="py-2 px-4 border-b">${calculateTotalProfit(product).toFixed(2)}</td>
                       <td className="py-2 px-4 border-b">
-                        <button className="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
-                        <button className="text-red-600 hover:text-red-800">Delete</button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(product)} className="text-blue-600 hover:text-blue-800 mr-2">Edit</Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteProduct(product.id)} className="text-red-600 hover:text-red-800">Delete</Button>
                       </td>
                     </tr>
                   ))}
@@ -173,6 +212,22 @@ const ProductsPage = () => {
           )}
         </div>
       </main>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={isEditProductDialogOpen} onOpenChange={setIsEditProductDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <ProductForm
+              initialProduct={selectedProduct}
+              onProductSaved={handleProductSaved}
+              onClose={() => setIsEditProductDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
