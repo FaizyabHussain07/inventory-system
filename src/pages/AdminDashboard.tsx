@@ -47,6 +47,11 @@ const AdminDashboard = () => {
                 Retailers
               </Link>
             </li>
+            <li>
+              <Link to="/admin/product-assignments" className="block px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                Product Assignments
+              </Link>
+            </li>
             {/* Add more admin links here */}
           </ul>
         </nav>
